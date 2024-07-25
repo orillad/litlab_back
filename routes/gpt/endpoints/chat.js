@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const router = express.Router();
 
-router.post('/chatgpt', async (req, res) => {
+router.post('/chat', async (req, res) => {
     const prompt = req.body.prompt;
 
     if (!prompt) {
