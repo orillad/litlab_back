@@ -4,6 +4,9 @@ import express, { urlencoded, json } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
+
+console.log(process.env.OPENAI_API_KEY);
+
 import { networkInterfaces } from 'os';
 import "./testing.js";
 

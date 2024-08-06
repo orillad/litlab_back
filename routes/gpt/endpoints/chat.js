@@ -1,6 +1,9 @@
 // litlab_bakc/routes/chatgpt.js (ES Module Syntax)
 import express from 'express';
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const router = express.Router();
 
