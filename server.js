@@ -1,3 +1,5 @@
+// litlab_back/server.js
+
 import express, { urlencoded, json } from 'express';
 // const db = require('./models');
 // const routes = require('./routes');

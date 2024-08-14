@@ -1,4 +1,5 @@
-// litlab_bakc/routes/chatgpt.js (ES Module Syntax)
+// litlab_back/routes/gpt/endpoints/chat.js
+
 import express from 'express';
 import axios from 'axios';
 import dotenv from 'dotenv';

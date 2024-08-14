@@ -2,13 +2,21 @@ import express from 'express';
 import axios from 'axios';
 import OpenAI from "openai";
 import dotenv from 'dotenv';
+import cors from 'cors';
+import fs from "fs"; // Importar fs
 
 dotenv.config();
 
+const app = express();
+app.use(cors()); // Permitir todas las solicitudes CORS
+app.use(express.json()); // Asegurarse de que el cuerpo de la solicitud se pueda analizar como JSON
+
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY, 
-  });const router = express.Router();
+});
+const router = express.Router();
 
+// Endpoint para generar imágenes
 router.post('/dalle', async (req, res) => {
     const prompt = req.body.prompt;
 
@@ -17,32 +25,52 @@ router.post('/dalle', async (req, res) => {
     }
 
     try {
-        const response = await openai.images.generate(
-            {
-                model: "dall-e-3",
-                prompt: prompt
-            },
-            {
-                headers: {
-                    // 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-        // Llamada a la API de OpenAI para generar una imagen con DALL·E
-        // const response = await axios.post('https://api.openai.com/v1/images/generations', {
-        //     prompt: prompt,
-        //     n: 1, // Número de imágenes a generar
-        //     size: '1024x1024' // Tamaño de la imagen
-        // }, {
-        //     headers: {
-        //         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        //         'Content-Type': 'application/json',
-        //     },
-        // });
+        const response = await openai.images.generate({
+            model: "dall-e-3",
+            prompt: prompt
+        });
 
-        // Obtener la URL de la imagen generada
         const imageUrl = response.data[0].url;
-        res.json({ imageUrl: imageUrl });
+
+        // Hacer la solicitud de la imagen desde el servidor backend
+        const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+        const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+
+        res.set('Content-Type', 'image/png');
+        res.send(imageBuffer);
+    } catch (error) {
+        console.error('Error al hacer la petición a la API de OpenAI:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Endpoint para editar imágenes
+router.post('/dalle/edit', async (req, res) => {
+    const { prompt, imagePath } = req.body;
+    console.log("imageeeeee")
+    console.log(imagePath);
+    
+
+    console.log(prompt);
+    if (!prompt || !imagePath) {
+        
+        return res.status(400).json({ error: 'El prompt, imagePath son requeridos' });
+    }
+
+    try {
+        const image = await openai.images.edit({
+            image: fs.createReadStream(imagePath),
+            prompt: prompt,
+        });
+
+        const imageUrl = image.data[0].url;
+
+        // Hacer la solicitud de la imagen desde el servidor backend
+        const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+        const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+
+        res.set('Content-Type', 'image/png');
+        res.send(imageBuffer);
     } catch (error) {
         console.error('Error al hacer la petición a la API de OpenAI:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
