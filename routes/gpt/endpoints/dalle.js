@@ -1,3 +1,4 @@
+// litlab_back/routes/gpt/endpoints/dalle.js
 import express from 'express';
 import axios from 'axios';
 import OpenAI from "openai";
@@ -32,17 +33,14 @@ router.post('/dalle', async (req, res) => {
 
         const imageUrl = response.data[0].url;
 
-        // Hacer la solicitud de la imagen desde el servidor backend
-        const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-        const imageBuffer = Buffer.from(imageResponse.data, 'binary');
-
-        res.set('Content-Type', 'image/png');
-        res.send(imageBuffer);
+        // Retornar la URL de la imagen en lugar de la imagen misma
+        res.json({ imageUrl });
     } catch (error) {
         console.error('Error al hacer la petición a la API de OpenAI:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
+
 
 // Endpoint para editar imágenes
 router.post('/dalle/edit', async (req, res) => {
