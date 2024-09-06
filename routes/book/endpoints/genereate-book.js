@@ -3,6 +3,9 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
+import { generateToken } from '../../../utils/jwt.js'; // Importa la función para generar JWT
+import supabase from '../../../config/supabaseClient.js';
+
 
 const router = Router();
 const baseDir = path.resolve('books');
@@ -113,6 +116,7 @@ router.post('/generate-book', async (req, res) => {
   if (!title || !Array.isArray(chapters)) {
     return res.status(400).json({ success: false, message: 'Invalid title or chapters format' });
   }
+  const bookId = title.replace(/\s+/g, '_')
 
   const doc = new PDFDocument({ size: 'A4', layout: 'portrait' });
   const filePath = path.join(baseDir, `${title.replace(/\s+/g, '_')}.pdf`);
@@ -130,8 +134,28 @@ router.post('/generate-book', async (req, res) => {
   doc.end();
 
   // Esperar a que el archivo se haya guardado
-  writeStream.on('finish', () => {
-    res.json({ success: true, bookId: title.replace(/\s+/g, '_') });
+  writeStream.on('finish', async () => {
+
+    // Insertar el PDF en la tabla pdfs
+    const { data: pdfData, error: pdfError } = await supabase
+      .from('pdfs')
+      .insert([{ pdf_file: bookId }])
+      .single()
+      .select();
+
+    if (pdfError) {
+      console.error('Error inserting PDF:', pdfError);
+      return res.status(500).json({ error: 'Error inserting PDF', details: pdfError.message });
+    }
+
+    // Generar JWT con el ID del libro y otros datos si es necesario
+    const token = generateToken({ bookId });
+
+    res.json({
+      success: true,
+      bookId: bookId,
+      token // Incluir el token JWT en la respuesta
+    });
   });
 
   writeStream.on('error', (error) => {

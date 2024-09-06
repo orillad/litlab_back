@@ -30,11 +30,19 @@ app.use(json());
 
 import router_gpt from './routes/gpt/gpt.js';
 import router_book from './routes/book/book.js'
-import costumer_routes from './routes/customerRoutes.js'
+import costumer_routes from './routes/database/customerRoutes.js'
+import purchase_routes from './routes/database/purchaseRoutes.js'
+import pdf_routes from './routes/database/pdfRoutes.js'
+import payment_routes from './routes/payment/payment.js'
+
+
 
 app.use("/gpt", router_gpt);
 app.use("/book", router_book);
-app.use('/', costumer_routes);
+app.use('/api', costumer_routes);
+app.use('/api', purchase_routes);
+app.use('/api', pdf_routes);
+app.use('/api', payment_routes);
 
 // Sync sequelize models then start Express app
 // =============================================
