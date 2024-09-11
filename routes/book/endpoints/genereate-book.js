@@ -5,10 +5,45 @@ import path from 'path';
 import fetch from 'node-fetch';
 import { generateToken } from '../../../utils/jwt.js'; // Importa la función para generar JWT
 import supabase from '../../../config/supabaseClient.js';
+import { fileURLToPath } from 'url';
 
 
 const router = Router();
 const baseDir = path.resolve('books');
+
+
+
+
+// Get the directory name from import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Get the project root directory
+const projectRoot = path.resolve(__dirname, '../../../');
+
+// Construct absolute paths for fonts
+const fonts = {
+  arabic: path.join(projectRoot, 'fonts/NotoSansArabic-VariableFont_wdth,wght.ttf'),
+  catalan: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf'),
+  spanish: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf'),
+  french: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf'),
+  galician: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf'),
+  hindi: path.join(projectRoot, 'fonts/NotoSansDevanagari-VariableFont_wdth,wght.ttf'),
+  english: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf'),
+  italian: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf'),
+  mandarin: path.join(projectRoot, 'fonts/NotoSansTC-VariableFont_wght.ttf'),
+  portuguese: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf'),
+  russian: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf'),
+  basque: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf')
+};
+
+console.log(fonts);
+
+
+const getFontForLanguage = (language) => {
+  return fonts[language] || '../../../../fonts/NotoSans-VariableFont_wdth,wght.ttf'; // Usa una font predeterminada si no hi ha coincidència
+};
+
 
 // Función para descargar una imagen desde una URL y convertirla en un buffer
 const downloadImageAsBuffer = async (imageUrl) => {
@@ -18,9 +53,12 @@ const downloadImageAsBuffer = async (imageUrl) => {
 };
 
 // Función para agregar una portada
-const addCoverPage = (doc, title) => {
+const addCoverPage = (doc, title, lang) => {
   doc.addPage({ size: 'A4', margins: { top: 100, bottom: 50, left: 50, right: 50 } });
-  doc.fontSize(42).font('Times-Bold').text(title, {
+
+  const fontPath = getFontForLanguage(lang);
+
+  doc.fontSize(42).font(fontPath).text(title, {
     align: 'center',
     valign: 'center'
   });
@@ -32,17 +70,19 @@ const addCoverPage = (doc, title) => {
 };
 
 // Función para agregar un capítulo
-const addChapter = async (doc, chapter) => {
+const addChapter = async (doc, chapter, lang) => {
   doc.addPage({ size: 'A4', margins: { top: 50, bottom: 50, left: 60, right: 60 } });
 
+  const fontPath = getFontForLanguage(lang);
+
   // Agregar título del capítulo
-  doc.fontSize(30).font('Times-Bold').text(chapter.title, {
+  doc.fontSize(30).font(fontPath).text(chapter.title, {
     align: 'center'
   });
   doc.moveDown(1.5);
 
   // Agregar el texto del capítulo
-  doc.fontSize(14).font('Times-Roman').text(chapter.text, {
+  doc.fontSize(14).font(fontPath).text(chapter.text, {
     align: 'justify'
   });
 
@@ -111,7 +151,7 @@ const addChapter = async (doc, chapter) => {
 
 // Endpoint para generar el libro
 router.post('/generate-book', async (req, res) => {
-  const { title, chapters } = req.body;
+  const { title, chapters, lang } = req.body;
 
   if (!title || !Array.isArray(chapters)) {
     return res.status(400).json({ success: false, message: 'Invalid title or chapters format' });
@@ -124,11 +164,11 @@ router.post('/generate-book', async (req, res) => {
   doc.pipe(writeStream);
 
   // Agregar portada
-  addCoverPage(doc, title);
+  addCoverPage(doc, title, lang);
 
   // Agregar capítulos
   for (const chapter of chapters) {
-    await addChapter(doc, chapter);
+    await addChapter(doc, chapter, lang);
   }
 
   doc.end();

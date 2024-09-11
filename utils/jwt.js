@@ -1,3 +1,4 @@
+// litlab_back/utils/jwt.js
 import jwt from 'jsonwebtoken';
 
 // Leer la clave secreta desde las variables de entorno

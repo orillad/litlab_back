@@ -34,6 +34,7 @@ import costumer_routes from './routes/database/customerRoutes.js'
 import purchase_routes from './routes/database/purchaseRoutes.js'
 import pdf_routes from './routes/database/pdfRoutes.js'
 import payment_routes from './routes/payment/payment.js'
+import auth_routes from './routes/auth/auth.js'
 
 
 
@@ -43,6 +44,7 @@ app.use('/api', costumer_routes);
 app.use('/api', purchase_routes);
 app.use('/api', pdf_routes);
 app.use('/api', payment_routes);
+app.use('/auth', auth_routes);
 
 // Sync sequelize models then start Express app
 // =============================================

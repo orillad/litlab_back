@@ -5,6 +5,13 @@ import OpenAI from "openai";
 import dotenv from 'dotenv';
 import cors from 'cors';
 import fs from "fs"; // Importar fs
+import sharp from "sharp";
+import path from 'path';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -42,22 +49,46 @@ router.post('/dalle', async (req, res) => {
 });
 
 
-// Endpoint para editar imágenes
+
+const MAX_SIZE_MB = 4;
+const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
 router.post('/dalle/edit', async (req, res) => {
     const { prompt, imagePath } = req.body;
-    console.log("imageeeeee")
-    console.log(imagePath);
-    
 
-    console.log(prompt);
     if (!prompt || !imagePath) {
-        
-        return res.status(400).json({ error: 'El prompt, imagePath son requeridos' });
+        return res.status(400).json({ error: 'El prompt y imagePath son requeridos' });
     }
 
     try {
+        // Leer la imagen original
+        const originalImageBuffer = fs.readFileSync(imagePath);
+
+        // Obtener los metadatos de la imagen original
+        const metadata = await sharp(originalImageBuffer).metadata();
+
+        // Convertir a PNG y asegurar formato RGBA
+        let processedImageBuffer = await sharp(originalImageBuffer)
+            .ensureAlpha() // Asegura que la imagen tenga un canal alfa (RGBA)
+            .toFormat('png') // Asegura que el formato de salida sea PNG
+            .toBuffer();
+
+        // Reducción del tamaño de la imagen si es necesario
+        let finalImageBuffer = processedImageBuffer;
+        while (finalImageBuffer.length > MAX_SIZE_BYTES) {
+            finalImageBuffer = await sharp(finalImageBuffer)
+                .resize({ width: Math.floor(metadata.width * 0.9), height: Math.floor(metadata.height * 0.9), fit: 'inside' })
+                .toFormat('png', { quality: 80 }) // Ajusta la calidad si es necesario
+                .toBuffer();
+        }
+
+        // Guardar la imagen procesada temporalmente
+        const tempImagePath = path.join(__dirname, 'temp_image.png');
+        fs.writeFileSync(tempImagePath, finalImageBuffer);
+
+        // Enviar la imagen a la API de OpenAI
         const image = await openai.images.edit({
-            image: fs.createReadStream(imagePath),
+            image: fs.createReadStream(tempImagePath),
             prompt: prompt,
         });
 
@@ -65,10 +96,13 @@ router.post('/dalle/edit', async (req, res) => {
 
         // Hacer la solicitud de la imagen desde el servidor backend
         const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-        const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+        const imageResultBuffer = Buffer.from(imageResponse.data, 'binary');
+
+        // Eliminar el archivo temporal
+        fs.unlinkSync(tempImagePath);
 
         res.set('Content-Type', 'image/png');
-        res.send(imageBuffer);
+        res.send(imageResultBuffer);
     } catch (error) {
         console.error('Error al hacer la petición a la API de OpenAI:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
