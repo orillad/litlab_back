@@ -13,6 +13,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.45.2",
     "axios": "^1.7.2",
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
@@ -25,8 +26,10 @@
     "openai": "^4.54.0",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.15.0",
+    "pg": "^8.13.0",
     "punycode": "^2.3.1",
     "sharp": "^0.33.5",
+    "stripe": "^16.11.0",
     "url": "^0.11.4",
     "uuid": "^10.0.0"
   },

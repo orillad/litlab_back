@@ -6,6 +6,7 @@ import fetch from 'node-fetch';
 import { generateToken } from '../../../utils/jwt.js'; // Importa la función para generar JWT
 import supabase from '../../../config/supabaseClient.js';
 import { fileURLToPath } from 'url';
+import { insertBook } from '../../../controllers/BookController.js';
 
 
 const router = Router();
@@ -37,7 +38,7 @@ const fonts = {
   basque: path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf')
 };
 
-console.log(fonts);
+// console.log(fonts);
 
 
 const getFontForLanguage = (language) => {
@@ -156,7 +157,7 @@ router.post('/generate-book', async (req, res) => {
   if (!title || !Array.isArray(chapters)) {
     return res.status(400).json({ success: false, message: 'Invalid title or chapters format' });
   }
-  const bookId = title.replace(/\s+/g, '_')
+  const bookName = title.replace(/\s+/g, '_')
 
   const doc = new PDFDocument({ size: 'A4', layout: 'portrait' });
   const filePath = path.join(baseDir, `${title.replace(/\s+/g, '_')}.pdf`);
@@ -177,23 +178,13 @@ router.post('/generate-book', async (req, res) => {
   writeStream.on('finish', async () => {
 
     // Insertar el PDF en la tabla pdfs
-    const { data: pdfData, error: pdfError } = await supabase
-      .from('pdfs')
-      .insert([{ pdf_file: bookId }])
-      .single()
-      .select();
-
-    if (pdfError) {
-      console.error('Error inserting PDF:', pdfError);
-      return res.status(500).json({ error: 'Error inserting PDF', details: pdfError.message });
-    }
-
+    insertBook(bookName);
     // Generar JWT con el ID del libro y otros datos si es necesario
-    const token = generateToken({ bookId });
+    const token = generateToken({ bookName });
 
     res.json({
       success: true,
-      bookId: bookId,
+      bookId: bookName,
       token // Incluir el token JWT en la respuesta
     });
   });

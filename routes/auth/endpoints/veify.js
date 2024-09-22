@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET_KEY;
  * @param {Response} res - La respuesta del servidor.
  */
 router.post('/verify', async (req, res) => {
-        console.log("VERIFYYYYY");
+        // console.log("VERIFYYYYY");
     
     const token = req.headers.authorization?.split(' ')[1]; // Obtener el token del header Authorization
 

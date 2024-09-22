@@ -3,7 +3,6 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, readFileSync, unlinkSync } from 'fs';
 import * as customerController from '../../../controllers/customerController.js';
-import * as pdfController from '../../../controllers/pdfController.js';
 import * as purchaseController from '../../../controllers/purchaseController.js';
 
 
@@ -13,29 +12,27 @@ const router = Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-router.post('/process-payment', async (req, res) => {
+router.post('/process-book', async (req, res) => {
     try {
         const { bookId, customerInfo } = req.body;
         console.log('Received payment request:', { bookId, customerInfo });
 
-        const paymentSuccess = true; // Simulated payment response
-        if (!paymentSuccess) {
-            return res.status(400).json({ success: false, message: 'Payment failed' });
-        }
 
         const email = customerInfo.email;
         console.log('Looking up customer with email:', email);
 
-        const existingCustomer = await customerController.findCustomerByEmail({ params: { email } });
+        const existingCustomer = await customerController.findCustomerByEmail(email);
 
         let customerId;
         if (existingCustomer.found) {
-            console.log('Customer found:', existingCustomer.customer[0]);
-            customerId = existingCustomer.customer[0].id;
+            console.log('Customer found:', existingCustomer.customer);
+            customerId = existingCustomer.customer.id;
         } else {
             console.log('Customer not found, adding new customer:', customerInfo);
-            const addCustomerResponse = await customerController.addCustomer({ params: customerInfo });
-            customerId = addCustomerResponse.data.id;
+            const addCustomerResponse = await customerController.addCustomer(customerInfo);
+            console.log(addCustomerResponse.customer.id);
+            
+            customerId = addCustomerResponse.customer.id;
         }
 
         const filePath = join(__dirname, `../../../books/${bookId}.pdf`);
@@ -43,11 +40,13 @@ router.post('/process-payment', async (req, res) => {
 
         if (existsSync(filePath)) {
             // Pass `res` as part of the context rather than in `req.body`
-            const pruchase = await purchaseController.createPurchase({ body: { customerId, bookId } }, res);
-            if(pruchase){
+            const purchase = await purchaseController.createPurchase({ body: { customerId, bookId } }, res);
+            console.log("puurchasee", purchase);
+            
+            if(purchase){
                 console.log("Purchase created successfully");
                 console.log("Sending success response");
-                return res.status(200).json({ success: true, message: 'Success response', downloadUrl: `/download-book/${bookId}` });
+                return res.status(200).json({ success: true, message: 'Success response', downloadUrl: `/download-book/${bookId}`, purchaseId: purchase.data.id });
 
             }
 

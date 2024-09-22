@@ -1,8 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../../../utils/jwt.js';  // Utilizamos la función para generar JWT
-import supabase from '../../../config/supabaseClient.js';
 import { Router } from 'express';
-
+import { getAdminByEmail } from '../../../controllers/adminContoller.js';
 const router = Router();
 
 /**
@@ -14,25 +13,25 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
+        console.log(email);
+        
         // Buscar el administrador en la base de datos
-        const { data, error } = await supabase
-            .from('admin')
-            .select('email, password')
-            .eq('email', email)
-            .single();  // Esperamos solo un registro, ya que el email debería ser único
-
-        if (error || !data) {
+        // const admin = await getAdminByEmail(email);
+        const admin = await getAdminByEmail(email);
+        console.log("admin",admin);
+        
+        
+        if (!admin) {
             return res.status(401).json({ message: 'Credenciales incorrectas' });
         }
-
         // Verificar la contraseña utilizando bcrypt
-        const isPasswordValid = await bcrypt.compare(password, data.password);
+        const isPasswordValid = await bcrypt.compare(password, admin.password);
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Credenciales incorrectas' });
         }
 
         // Generar el token JWT con el email y el rol de administrador
-        const token = generateToken({ email: data.email, role: 'admin' });
+        const token = generateToken({ email: admin.email, role: 'admin' });
 
         res.json({ token });  // Devolvemos el token al cliente
     } catch (err) {

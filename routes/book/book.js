@@ -7,7 +7,7 @@ const router = express.Router();
 export default router;
 
 import generateBookRouter from "./endpoints/genereate-book.js"
-import processPaymenrRouter from "./endpoints/process-payment.js"
+import processPaymenrRouter from "./endpoints/process-book.js"
 
 router.use("", generateBookRouter);
 router.use("", processPaymenrRouter);

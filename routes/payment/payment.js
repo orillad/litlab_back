@@ -6,6 +6,10 @@ import express from "express";
 const router = express.Router();
 export default router;
 
-import validatePaymentRouter from "./endpoints/validate-payment.js"
+import validatePaymentRouter from "./endpoints/validate-payment-access.js"
+import checkoutPaymentRouter from "./endpoints/checkout.js"
+// import webhookRouter from "./endpoints/webhook.js"
 
 router.use("", validatePaymentRouter);
+router.use("", checkoutPaymentRouter);
+// router.use("/webhook", webhookRouter);

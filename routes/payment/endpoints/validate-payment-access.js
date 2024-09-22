@@ -1,7 +1,7 @@
 import { Router } from 'express';
 const router = Router();
 import { verifyToken } from '../../../utils/jwt.js';
-import { getPdfByName } from '../../../controllers/pdfController.js'; // Ajusta la ruta a donde esté tu función getPdfById
+import { getBookByName } from '../../../controllers/BookController.js'; // Ajusta la ruta a donde esté tu función getPdfById
 
 // Endpoint para validar el acceso al pago
 router.post('/validate-payment-access', async (req, res) => {
@@ -19,7 +19,7 @@ router.post('/validate-payment-access', async (req, res) => {
     
 
     // Verificar si el PDF asociado al bookName es válido
-    const pdfResponse = await checkPdfExists(bookName);
+    const pdfResponse = await checkBookExists(bookName);
 
     if (!pdfResponse) {
       // return res.status(404).json({ isValid: false, message: 'PDF no encontrado' });
@@ -36,15 +36,15 @@ router.post('/validate-payment-access', async (req, res) => {
 });
 
 // Función auxiliar para verificar la existencia del PDF
-const checkPdfExists = async (bookName) => {
+const checkBookExists = async (bookName) => {
   try {
     // Simular una llamada a getPdfById para verificar la existencia del PDF
-    const response = await getPdfByName({ params: { bookName } });
+    const response = await getBookByName({ params: { bookName } });
     console.log("RESPOMNSEE");
     
     console.log(response);
     
-    return response.exists;
+    return response.exist;
   } catch (error) {
     console.error('Error en checkPdfExists:', error);
     return { exists: false };

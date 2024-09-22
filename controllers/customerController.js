@@ -1,19 +1,10 @@
-import supabase from '../config/supabaseClient.js';
+import pool from '../config/db.js'
 
 // Obtener todos los clientes
 export const getAllCustomers = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*'); // Selecciona todos los campos de la tabla
-
-    if (error) {
-      console.error('Error fetching customers:', error);
-      return res.status(500).json({ error: 'Error fetching customers', details: error.message });
-    }
-
-    console.log('Fetched customers:', data);
-    res.status(200).json(data);
+    const result = await pool.query('SELECT * FROM customers');
+    res.status(200).json(result.rows);
   } catch (error) {
     console.error('Error in getAllCustomers:', error);
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
@@ -21,165 +12,115 @@ export const getAllCustomers = async (req, res) => {
 };
 
 // Añadir un nuevo cliente
-// Refactoriza addCustomer para no enviar respuestas HTTP
-export const addCustomer = async (req, res) => {
+export const addCustomer = async (customerData) => {
+  const { first_name, last_name, email, mobile_phone, country, state_province, postal_code, shipping_address } = customerData;
+
+  // Verificar campos obligatorios
+  if (!first_name || !last_name || !email) {
+    return { error: 'Missing required fields: first_name, last_name, or email' };
+  }
+
   try {
-    const { first_name, last_name, email, mobile_phone, country, state_province, postal_code, shipping_address } = req.params;
+    const result = await pool.query(
+      'INSERT INTO customers (first_name, last_name, email, mobile_phone, country, state_province, postal_code, shipping_address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [first_name, last_name, email, mobile_phone, country, state_province, postal_code, shipping_address]
+    );
 
-    // Verificar campos obligatorios
-    if (!first_name || !last_name || !email) {
-      return { status: 400, error: 'Missing required fields: first_name, last_name, or email' };
-    }
-
-    // Insertar cliente en la base de datos
-    const { data, error } = await supabase
-      .from('customers')
-      .insert([{ first_name, last_name, email, mobile_phone, country, state_province, postal_code, shipping_address }])
-      .select();
-
-    if (error) {
-      console.error('Error adding customer:', error);
-      return { status: 500, error: 'Error adding customer', details: error.message };
-    }
-
-    if (!data || data.length === 0) {
-      console.error('No data returned after insert');
-      return { status: 500, error: 'No data returned after insert' };
-    }
-
-    console.log('Inserted customer:', data[0]);
-
-    // Devolver éxito y los datos del cliente insertado
-    return { status: 201, data: data[0] }; // Devolver el primer (y único) cliente insertado
+    return { success: true, customer: result.rows[0] };
   } catch (error) {
-    console.error('Error in addCustomer:', error);
-    return { status: 500, error: 'Internal Server Error', details: error.message };
+    console.error('Error adding customer:', error);
+    return { error: 'Error adding customer', details: error.message };
   }
 };
 
 
-
 // Actualizar un cliente
 export const updateCustomer = async (req, res) => {
+  const { id } = req.params;
+  const { first_name, last_name, email, mobile_phone, country, state_province, postal_code, shipping_address } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ error: 'Missing required parameter: id' });
+  }
+
   try {
-    const { id } = req.params;
-    const { first_name, last_name, email, mobile_phone, country, state_province, postal_code, shipping_address } = req.body;
+    const result = await pool.query(
+      'UPDATE customers SET first_name = $1, last_name = $2, email = $3, mobile_phone = $4, country = $5, state_province = $6, postal_code = $7, shipping_address = $8 WHERE id = $9 RETURNING *',
+      [first_name, last_name, email, mobile_phone, country, state_province, postal_code, shipping_address, id]
+    );
 
-    if (!id) {
-      return res.status(400).json({ error: 'Missing required parameter: id' });
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Customer not found' });
     }
 
-    const { data, error } = await supabase
-      .from('customers')
-      .update({ first_name, last_name, email, mobile_phone, country, state_province, postal_code, shipping_address })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error updating customer:', error);
-      return res.status(500).json({ error: 'Error updating customer', details: error.message });
-    }
-
-    res.status(200).json(data);
+    res.status(200).json(result.rows[0]);
   } catch (error) {
-    console.error('Error in updateCustomer:', error);
+    console.error('Error updating customer:', error);
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 };
 
 // Eliminar un cliente
 export const deleteCustomer = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: 'Missing required parameter: id' });
+  }
+
   try {
-    const { id } = req.params;
+    const result = await pool.query('DELETE FROM customers WHERE id = $1 RETURNING *', [id]);
 
-    if (!id) {
-      return res.status(400).json({ error: 'Missing required parameter: id' });
-    }
-
-    const { data, error } = await supabase
-      .from('customers')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting customer:', error);
-      return res.status(500).json({ error: 'Error deleting customer', details: error.message });
-    }
-
-    if (data.length === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Customer not found' });
     }
 
     res.status(204).end();
   } catch (error) {
-    console.error('Error in deleteCustomer:', error);
+    console.error('Error deleting customer:', error);
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 };
 
-
 // Buscar un cliente por correo electrónico
-// Función para buscar un cliente por correo electrónico y devolver los datos directamente
-export const findCustomerByEmail = async (req, res) => {
+export const findCustomerByEmail = async (email) => {
+  if (!email) {
+    return { error: 'Email parameter is required' };
+  }
+
   try {
-    const { email } = req.params;
-    if (!email) {
-      return { status: 400, error: 'Email parameter is required' };
-    }
+    const result = await pool.query('SELECT * FROM customers WHERE email = $1 LIMIT 1', [email]);
 
-    // Buscar el cliente por email
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('email', email)
-      .limit(1);
-
-    if (error) {
-      console.error('Error details:', error);
-      return { status: 500, error: 'Error finding customer by email', details: error.message };
-    }
-
-    if (data.length !== 0) {
-      return { status: 200, found: true, customer: data };
+    if (result.rowCount > 0) {
+      return { found: true, customer: result.rows[0] };
     } else {
-      return { status: 200, found: false };
+      return { found: false };
     }
   } catch (error) {
-    console.error('Error in findCustomerByEmail:', error);
-    return { status: 500, error: 'Internal Server Error', details: error.message };
+    console.error('Error finding customer by email:', error);
+    return { error: 'Internal Server Error', details: error.message };
   }
 };
 
 
+// Buscar un cliente por ID
 export const findCustomerById = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: 'ID parameter is required' });
+  }
+
   try {
-    const { id } = req.params;
-    if (!id) {
-      return { status: 400, error: 'ID parameter is required' };
-    }
+    const result = await pool.query('SELECT * FROM customers WHERE id = $1 LIMIT 1', [id]);
 
-    // Buscar el cliente por id
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('id', id)
-      .limit(1);
-
-      console.log(data);
-      
-
-    if (error) {
-      console.error('Error details:', error);
-      return { status: 500, error: 'Error finding customer by id', details: error.message };
-    }
-
-    if (data.length !== 0) {
-      res.status(200).json({ found: true, customer: data });
-      // return { status: 200, found: true, customer: data };
+    if (result.rowCount > 0) {
+      res.status(200).json({ found: true, customer: result.rows[0] });
     } else {
-      return { status: 200, found: false };
+      res.status(200).json({ found: false });
     }
   } catch (error) {
-    console.error('Error in findCustomerById:', error);
-    return { status: 500, error: 'Internal Server Error', details: error.message };
+    console.error('Error finding customer by ID:', error);
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 };
