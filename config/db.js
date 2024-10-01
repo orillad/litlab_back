@@ -4,13 +4,18 @@ const { Pool } = pkg;
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Configuración de la conexión a la base de datos
+// Configuración de la conexión a la base de datos sin SSL
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  connectionString: process.env.DATABASE_URL,
+  ssl: false // Desactiva completamente SSL
+});
+
+pool.connect((err, client, release) => {
+  if (err) {
+    return console.error('Error acquiring client', err.stack);
+  }
+  console.log('Connected to the database');
+  release();
 });
 
 // Exportar el pool para su uso en otros módulos
