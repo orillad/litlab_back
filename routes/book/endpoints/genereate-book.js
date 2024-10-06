@@ -42,7 +42,7 @@ const fonts = {
 
 
 const getFontForLanguage = (language) => {
-  return fonts[language] || '../../../../fonts/NotoSans-VariableFont_wdth,wght.ttf'; // Usa una font predeterminada si no hi ha coincidència
+  return fonts[language] || path.join(projectRoot, 'fonts/NotoSans-VariableFont_wdth,wght.ttf'); // Usa una font predeterminada si no hi ha coincidència
 };
 
 
