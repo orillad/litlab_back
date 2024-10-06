@@ -10,7 +10,35 @@ import "./testing.js";
 
 const app = express();
 
-app.use(cors({ origin: "*" }));
+// app.use(cors({ origin: "*" }));
+
+
+const corsOptions = {
+  origin: 'https://litlabbooks.com', // Cambia esto por tu dominio o usa '*' para permitir todos
+  methods: [
+      'GET', 
+      'POST', 
+      'PUT', 
+      'DELETE', 
+      'OPTIONS', 
+      'PATCH' // Añade cualquier otro método que necesites
+  ],
+  allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With' // Puedes añadir más encabezados permitidos
+  ],
+  exposedHeaders: [
+      'Content-Length', 
+      'X-Knowledge-Base-Id' // Añade los encabezados que deseas exponer al cliente
+  ],
+  credentials: true, // Permite enviar cookies y credenciales
+  preflightContinue: false, // Si deseas que la respuesta a la solicitud preflight se gestione automáticamente
+};
+
+app.use(cors(corsOptions));
+
+
 
 const PORT = process.env.PORT || 3000;
 
