@@ -1,48 +1,47 @@
 import express, { urlencoded, json } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { networkInterfaces } from 'os';
+
 dotenv.config();
 
 console.log(process.env.OPENAI_API_KEY);
 
-import { networkInterfaces } from 'os';
-import "./testing.js";
+// Comprobar si estamos en producción o en desarrollo
+const isProduction = process.env.NODE_ENV === 'production';
 
 const app = express();
 
-// app.use(cors({ origin: "*" }));
-
-
+// Configuración de CORS
 const corsOptions = {
-  origin: 'https://litlabbooks.com', // Cambia esto por tu dominio o usa '*' para permitir todos
+  origin: isProduction ? 'https://litlabbooks.com' : '*', // Cambiar según el entorno
   methods: [
-      'GET', 
-      'POST', 
-      'PUT', 
-      'DELETE', 
-      'OPTIONS', 
-      'PATCH' // Añade cualquier otro método que necesites
+    'GET', 
+    'POST', 
+    'PUT', 
+    'DELETE', 
+    'OPTIONS', 
+    'PATCH'
   ],
   allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'X-Requested-With' // Puedes añadir más encabezados permitidos
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With'
   ],
   exposedHeaders: [
-      'Content-Length', 
-      'X-Knowledge-Base-Id' // Añade los encabezados que deseas exponer al cliente
+    'Content-Length', 
+    'X-Knowledge-Base-Id'
   ],
-  credentials: true, // Permite enviar cookies y credenciales
-  preflightContinue: false, // Si deseas que la respuesta a la solicitud preflight se gestione automáticamente
+  credentials: true,
+  preflightContinue: false,
 };
 
 app.use(cors(corsOptions));
 
-
-
+// Configurar el puerto
 const PORT = process.env.PORT || 3000;
 
-// **Coloca la ruta del webhook al inicio, antes de cualquier middleware global que procese JSON**
+// Ruta del webhook
 import webhook from './routes/payment/endpoints/webhook.js';
 app.use('/api/webhook', express.raw({ type: 'application/json' }), webhook);
 
@@ -50,7 +49,7 @@ app.use('/api/webhook', express.raw({ type: 'application/json' }), webhook);
 app.use(urlencoded({ extended: true }));
 app.use(json());
 
-// Otros middlewares y rutas
+// Rutas de la aplicación
 import router_gpt from './routes/gpt/gpt.js';
 import router_book from './routes/book/book.js';
 import customer_routes from './routes/database/customerRoutes.js';
@@ -59,7 +58,6 @@ import book_routes from './routes/database/BookRoutes.js';
 import payment_routes from './routes/payment/payment.js';
 import auth_routes from './routes/auth/auth.js';
 
-// Define otras rutas después de la configuración del webhook
 app.use("/gpt", router_gpt);
 app.use("/book", router_book);
 app.use('/api', customer_routes);
@@ -82,4 +80,5 @@ app.listen(PORT, () => {
   console.log(`API running at:`);
   console.log(`- Local:   ${localUrl}`);
   console.log(`- Network: ${networkUrl}`);
+  console.log(`Environment: ${isProduction ? 'Production' : 'Development'}`); // Muestra el entorno
 });
