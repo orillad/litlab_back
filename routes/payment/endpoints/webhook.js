@@ -11,6 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_API_KEY);
 
 // Utilizar express.raw() para manejar el cuerpo en bruto
 router.post('/', express.raw({ type: 'application/json' }), (req, res) => {
+  console.log('Received webhook event:', req.body.toString()); // Log the raw body
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
