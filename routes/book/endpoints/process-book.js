@@ -77,6 +77,9 @@ router.get('/download-book/:bookId', (req, res) => {
     const filePath = join(__dirname, `../../../books/${bookId}.pdf`);
 
     if (existsSync(filePath)) {
+        res.setHeader('Content-Disposition', `attachment; filename="${bookId}.pdf"`);
+        res.setHeader('Content-Type', 'application/pdf');
+        
         res.download(filePath, `${bookId}.pdf`, async (err) => {
             if (err) {
                 console.error('Error during download', err);
@@ -94,5 +97,6 @@ router.get('/download-book/:bookId', (req, res) => {
         res.status(404).send('Book not found');
     }
 });
+
 
 export default router;
