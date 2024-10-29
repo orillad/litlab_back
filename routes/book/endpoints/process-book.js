@@ -112,7 +112,7 @@ router.get('/get-download-link/:bookName', async (req, res) => {
         
 
         // Genera la URL de descàrrega amb el codi
-        const downloadUrl = `${req.protocol}://${req.get('host')}/book/download-book/${purchaseData.data.downloadtoken}`;
+        const downloadUrl = `https://${req.get('host')}/book/download-book/${purchaseData.data.downloadtoken}`;
 
         res.status(200).json({
             message: 'Download link generated',
