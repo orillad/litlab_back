@@ -2,6 +2,7 @@ import express, { urlencoded, json } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { networkInterfaces } from 'os';
+import "./testing.js"
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ import purchase_routes from './routes/database/purchaseRoutes.js';
 import book_routes from './routes/database/BookRoutes.js';
 import payment_routes from './routes/payment/payment.js';
 import auth_routes from './routes/auth/auth.js';
+import sendEmail_routes  from './routes/email/sendEmail.js';
 
 app.use("/gpt", router_gpt);
 app.use("/book", router_book);
@@ -65,6 +67,7 @@ app.use('/api', purchase_routes);
 app.use('/api', book_routes);
 app.use('/api', payment_routes);
 app.use('/auth', auth_routes);
+app.use('/api', sendEmail_routes);
 
 // Iniciar la aplicación Express
 app.listen(PORT, () => {

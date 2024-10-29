@@ -1,0 +1,46 @@
+\documentclass[a4paper]{article}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{lipsum} % Per generar text de prova
+
+\geometry{top=0cm, bottom=0cm, left=0cm, right=0cm} % Estableix marges a zero
+
+\begin{document}
+
+% Dibuixa un rectangle que cobreixi tota la pàgina
+\begin{center}
+    \color{#113A3A}
+    \noindent\rule{\textwidth}{\textheight}
+\end{center}
+
+% Afegir el text
+\color{#FED0CE}
+\begin{center}
+    \textbf{\Huge Create, dream, and educate.}
+\end{center}
+
+\vspace{12pt} % Espai vertical
+
+% Afegeix el títol
+\newcommand{\addTitle}[2]{
+    \vspace{50pt} % Espai vertical per centrar el títol
+    \color{#FED0CE}
+    \textbf{\Huge #1}
+}
+
+% Exemple d'ús
+\addTitle{La meva primera història} % Canvia el títol i la llengua segons calgui
+
+% Afegir la imatge a la part inferior de la pàgina
+\begin{figure}[b]
+    \centering
+    \includegraphics[width=100pt, height=50pt]{./public/images/logo.png} % Ruta de la imatge
+\end{figure}
+
+% Afegir una nova pàgina
+\newpage
+
+% Contingut de la nova pàgina
+\lipsum[1-2] % Exemple de text de prova
+
+\end{document}

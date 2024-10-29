@@ -1,19 +1,24 @@
 import pool from '../config/db.js';
 
 // Insert a new book name
-export const insertBook = async (book_name) => {
+export const insertBook = async (book_name, bookFormat) => {
   // Verificar si se proporcionó el nombre del libro
   if (!book_name) {
     return { error: true, message: 'Book name is required' };
   }
 
+  // Verificar si se proporcionó el tipo de libro
+  if (!bookFormat || !['pdf', 'physical'].includes(bookFormat)) {
+    return { error: true, message: 'Valid book type is required (pdf or physical)' };
+  }
+
   try {
-    // Consulta SQL para insertar el nombre del libro en la tabla `pdfs`
+    // Consulta SQL para insertar el nombre del libro en la tabla `books`
     const query = `
-      INSERT INTO books (book_name) 
-      VALUES ($1) RETURNING *;
+      INSERT INTO books (book_name, type) 
+      VALUES ($1, $2) RETURNING *;
     `;
-    const values = [book_name];
+    const values = [book_name, bookFormat];
     const { rows, rowCount } = await pool.query(query, values);
 
     // Verificar si se insertó correctamente el registro
@@ -28,6 +33,7 @@ export const insertBook = async (book_name) => {
     return { error: true, message: 'Internal Server Error', details: error.message };
   }
 };
+
 
 // Obtener un book por ID
 export const getBookById = async (req, res) => {

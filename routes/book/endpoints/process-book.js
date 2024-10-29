@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 import { existsSync, readFileSync, unlinkSync } from 'fs';
 import * as customerController from '../../../controllers/customerController.js';
 import * as purchaseController from '../../../controllers/purchaseController.js';
+import { sendEmail } from '../../../mail/sendEmail.js';
+import { v4 as uuidv4 } from 'uuid'; // Llibreria per generar tokens únics
 
 
 const router = Router();
@@ -14,9 +16,8 @@ const __dirname = dirname(__filename);
 
 router.post('/process-book', async (req, res) => {
     try {
-        const { bookId, customerInfo } = req.body;
-        console.log('Received payment request:', { bookId, customerInfo });
-
+        const { bookName, customerInfo } = req.body;
+        console.log('Received payment request:', { bookName, customerInfo });
 
         const email = customerInfo.email;
         console.log('Looking up customer with email:', email);
@@ -35,28 +36,23 @@ router.post('/process-book', async (req, res) => {
             customerId = addCustomerResponse.customer.id;
         }
 
-        const filePath = join(__dirname, `../../../books/${bookId}.pdf`);
-        console.log('Checking file path:', filePath);
+        const templatePath = './mail/templates/generating.ejs'; // Ruta a la plantilla EJS
+        const usr_mail = email; // Correo destinatario
+        const subject = 'Welcome to LitLab Books'; // Email subject
+        const templateData = { name: existingCustomer.customer.name, book_title: bookName.replace(/_/g, ' ') }; // Datos para la plantilla
+        console.log("Sending email...");
 
-        if (existsSync(filePath)) {
-            // Pass `res` as part of the context rather than in `req.body`
-            const purchase = await purchaseController.createPurchase({ body: { customerId, bookId } }, res);
-            console.log("puurchasee", purchase);
-            
-            if(purchase){
-                console.log("Purchase created successfully");
-                console.log("Sending success response");
-                return res.status(200).json({ success: true, message: 'Success response', downloadUrl: `/download-book/${bookId}`, purchaseId: purchase.data.id });
+        // Enviar el correo
+        sendEmail(templatePath, usr_mail, subject, templateData);
 
-            }
-
+        const purchase = await purchaseController.createPurchase({ body: { customerId, bookName } }, res);
+        console.log("Purchase created successfully:", purchase);
         
-        } else {
-            console.log('Book not found');
-            if (!res.headersSent) {
-                return res.status(404).json({ success: false, message: 'Book not found' });
-            }
+        if (purchase) {
+            console.log("Sending success response");
+            return res.status(200).json({ success: true, message: 'Purchase created successfully', purchase: purchase.data });
         }
+
     } catch (error) {
         console.error('Error processing payment:', error.message);
         console.error(error.stack);
@@ -72,31 +68,59 @@ router.post('/process-book', async (req, res) => {
 
 
 // Route to download the book after successful payment
-router.get('/download-book/:bookId', (req, res) => {
-    const { bookId } = req.params;
-    const filePath = join(__dirname, `../../../books/${bookId}.pdf`);
+router.get('/download-book/:token', async (req, res) => {
+    const { token } = req.params;
 
-    if (existsSync(filePath)) {
-        res.setHeader('Content-Disposition', `attachment; filename="${bookId}.pdf"`);
-        res.setHeader('Content-Type', 'application/pdf');
-        
-        res.download(filePath, `${bookId}.pdf`, async (err) => {
-            if (err) {
-                console.error('Error during download', err);
-                res.status(500).send('Error during download');
-            }
-            //  else {
-            //     try {
-            //         await unlink(filePath);
-            //     } catch (unlinkErr) {
-            //         console.error('Error deleting file after download', unlinkErr);
-            //     }
-            // }
-        });
+    // Verifica el token a la base de dades (pseudo codi)
+    const response = await purchaseController.getBookNameByToken(token);
+    
+
+    if (response.found) {
+        const bookName = response.bookName
+        const filePath = join(__dirname, `../../../books/${bookName}.pdf`);
+
+        if (existsSync(filePath)) {
+            res.setHeader('Content-Disposition', `attachment; filename="${bookName}.pdf"`);
+            res.setHeader('Content-Type', 'application/pdf');
+
+            res.download(filePath, `${bookName}.pdf`, (err) => {
+                if (err) {
+                    console.error('Error during download', err);
+                    res.status(500).send('Error during download');
+                }
+            });
+        } else {
+            res.status(404).send('Book not found');
+        }
     } else {
-        res.status(404).send('Book not found');
+        res.status(403).send('Invalid or expired token');
     }
 });
 
+
+
+router.get('/get-download-link/:bookName', async (req, res) => {
+    const { bookName } = req.params;
+    const filePath = join(__dirname, `../../../books/${bookName}.pdf`);
+
+    if (existsSync(filePath)) {
+        // Genera un codi únic per a aquest llibre
+
+        // Guarda el codi en la base de dades (pseudo codi)
+        const purchaseData = await purchaseController.getPurchaseByBookName(bookName)
+        console.log(purchaseData);
+        
+
+        // Genera la URL de descàrrega amb el codi
+        const downloadUrl = `${req.protocol}://${req.get('host')}/book/download-book/${purchaseData.data.downloadtoken}`;
+
+        res.status(200).json({
+            message: 'Download link generated',
+            url: downloadUrl
+        });
+    } else {
+        res.status(404).json({ message: 'Book not found' });
+    }
+});
 
 export default router;

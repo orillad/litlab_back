@@ -1,15 +1,16 @@
 import pool from '../config/db.js';
 import fs from 'fs';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid'; // Llibreria per generar tokens únics
 
 // Crear una nueva compra con un PDF
 export const createPurchase = async (req, res) => {
   try {
-    const { customerId, bookId } = req.body;
+    const { customerId, bookName } = req.body;
     console.log('Creating purchase for customer:', customerId);
 
     // Obtener el PDF por ID
-    const { rows: pdfData, rowCount: pdfCount } = await pool.query('SELECT id FROM books WHERE book_name = $1', [bookId]);
+    const { rows: pdfData, rowCount: pdfCount } = await pool.query('SELECT id FROM books WHERE book_name = $1', [bookName]);
 
     if (pdfCount === 0) {
       return { error: 'BOOK not found' };
@@ -17,8 +18,8 @@ export const createPurchase = async (req, res) => {
 
     // Insertar la compra en la tabla purchases
     const { rows: purchaseData } = await pool.query(
-      'INSERT INTO purchases (customer_id, book_id) VALUES ($1, $2) RETURNING *',
-      [customerId, pdfData[0].id]
+      'INSERT INTO purchases (customer_id, book_id, downloadToken) VALUES ($1, $2, $3) RETURNING *',
+      [customerId, pdfData[0].id, uuidv4()]
     );
 
     return { message: 'Purchase created successfully', data: purchaseData[0] };
@@ -168,3 +169,89 @@ export const getPurchaseById = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 };
+
+
+export const getPurchaseByBookName = async (bookName) => {
+  try {
+    // const { bookName } = req.params;
+    if (!bookName) {
+      return { error: 'bookName parameter is required' };
+    }
+    console.log(bookName);
+
+    // Primero, buscar el bookId en la tabla de libros usando el bookName
+    const bookResult = await pool.query(
+      'SELECT id FROM books WHERE book_name = $1',
+      [bookName]
+    );
+
+    // Verificar si el libro existe
+    if (bookResult.rowCount === 0) {
+      return { found: false, error: 'Book not found' };
+    }
+
+    const bookId = bookResult.rows[0].id;
+
+    // Consultar la compra en la base de datos por el bookId obtenido
+    const { rows, rowCount } = await pool.query(
+      'SELECT id, customer_id, purchase_date, book_id, payment_state, downloadToken FROM purchases WHERE book_id = $1',
+      [bookId]
+    );
+
+    // Verificar si la compra existe
+    if (rowCount === 0) {
+      return { found: false, error: 'Purchase not found' };
+    }
+
+    // Devolver la información de la compra
+    return { found: true, data: rows[0] };
+  } catch (error) {
+    console.error('Error in getPurchaseByBookName:', error);
+    return { error: 'Internal Server Error', details: error.message };
+  }
+};
+
+
+export const getBookNameByToken = async (downloadToken) => {
+  try {
+    if (!downloadToken) {
+      return { error: 'downloadToken parameter is required' };
+    }
+
+    console.log(downloadToken);
+
+    // Primero, buscar el bookId en la tabla de purchases usando el downloadToken
+    const purchaseResult = await pool.query(
+      'SELECT book_id FROM purchases WHERE downloadToken = $1',
+      [downloadToken]
+    );
+
+    // Verificar si la compra con el token existe
+    if (purchaseResult.rowCount === 0) {
+      return { found: false, error: 'Purchase not found' };
+    }
+
+    const bookId = purchaseResult.rows[0].book_id;
+
+    // Consultar el nombre del libro en la tabla de libros por el bookId obtenido
+    const { rows, rowCount } = await pool.query(
+      'SELECT book_name FROM books WHERE id = $1',
+      [bookId]
+    );
+
+    // Verificar si el libro existe
+    if (rowCount === 0) {
+      return { found: false, error: 'Book not found' };
+    }
+
+    // Devolver el nombre del libro
+    return { found: true, bookName: rows[0].book_name };
+  } catch (error) {
+    console.error('Error in getBookNameByToken:', error);
+    return { error: 'Internal Server Error', details: error.message };
+  }
+};
+
+
+
+

@@ -40,8 +40,8 @@ router.post('/create-checkout-session', async (req, res) => {
       metadata: {
         purchaseId: purchaseId
       },
-      success_url: `${FRONTEND_URL}${url}&payment=true&purchaseId=${purchaseId}`,
-      cancel_url: `${FRONTEND_URL}${url}&payment=false`,
+      success_url: `${FRONTEND_URL}/payment_done?payment=true`,
+      cancel_url: `${FRONTEND_URL}/payment_done?payment=false`,
     });
 
     res.json({ url: session.url });

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Book is Ready - LitLab Books</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .email-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .email-header {
+      background-color: #113A3A; /* Primary color */
+      color: #ffffff;
+      padding: 20px;
+      text-align: center;
+      border-radius: 8px 8px 0 0;
+    }
+    .email-header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .email-body {
+      padding: 20px;
+      background-color: #dddddd;
+    }
+    .email-body p {
+      font-size: 16px;
+      line-height: 1.5;
+      margin: 10px 0;
+    }
+    .email-body h1 {
+      font-size: 24px;
+      color: #333;
+    }
+    .email-body .highlight {
+      color: #113A3A; 
+      font-weight: bold;
+    }
+    .email-button {
+      display: inline-block;
+      background-color: #FED0CE; /* Secondary color */
+      text-decoration: none; /* Remove underline */
+      color: inherit; /* Use the color of the parent container or default */
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 16px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .email-button:hover {
+      background-color: #CBA6A4; /* Secondary hover */
+    }
+    .email-footer {
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1>Your Book is Ready</h1>
+    </div>
+    <div class="email-body">
+      <h1>Hello, <%= name %>!</h1>
+      <p>We are pleased to inform you that your book <span class="highlight"><%= book_title %></span> is ready for download.</p>
+      <p>Thank you for using LitLab Books to create a literary future based on artificial intelligence.</p>
+      <a href="<%= download_link %>" class="email-button">Download My Book</a>
+    </div>
+    <div class="email-footer">
+      <p>&copy; 2024 LitLab Books. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
