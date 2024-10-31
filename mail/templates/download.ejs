@@ -1,91 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Book is Ready - LitLab Books</title>
+  <title>Book Generation Notification</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f4f4f4;
-      color: #333;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      background-color: #113A3A;
+      color: #FFFFFF;
     }
-    .email-container {
-      width: 100%;
+
+    .container {
       max-width: 600px;
       margin: 0 auto;
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 0;
     }
-    .email-header {
-      background-color: #113A3A; /* Primary color */
-      color: #ffffff;
-      padding: 20px;
-      text-align: center;
-      border-radius: 8px 8px 0 0;
-    }
-    .email-header h1 {
+
+    .image-container-top {
+      width: 100%;
+      padding-top: 56.25%;
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
       margin: 0;
-      font-size: 24px;
     }
-    .email-body {
-      padding: 20px;
-      background-color: #dddddd;
+
+
+    .image-container-footer {
+      width: 100%;
+      padding-top: 50.3%;
+      /* Mantiene la relación de aspecto 16:9 */
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
     }
-    .email-body p {
+
+    .header-image {
+      background-image: url('https://litlabbooks.com/images/ready_top.jpg');
+    }
+
+    .footer-image {
+      background-image: url('https://litlabbooks.com/images/footer.jpg');
+    }
+
+    .content {
+      background-color: #FED0CE;
+      padding: 50px;
+      margin: 0;
+      text-align: left;
+    }
+
+    h2 {
+      font-size: 42px;
+      color: #113A3A;
+      margin-top: 0;
+    }
+
+    p {
       font-size: 16px;
-      line-height: 1.5;
-      margin: 10px 0;
+      line-height: 1.6;
+      color: #113A3A;
+      margin: 0;
+      padding-top: 10px;
     }
-    .email-body h1 {
-      font-size: 24px;
-      color: #333;
-    }
-    .email-body .highlight {
-      color: #113A3A; 
+
+    .highlight {
       font-weight: bold;
+      color: #113A3A;
     }
-    .email-button {
-      display: inline-block;
-      background-color: #FED0CE; /* Secondary color */
-      text-decoration: none; /* Remove underline */
-      color: inherit; /* Use the color of the parent container or default */
-      padding: 10px 20px;
-      border-radius: 50px;
-      font-size: 16px;
+
+    .footer-text {
+      font-size: 14px;
+      color: #113A3A;
       margin-top: 20px;
       text-align: center;
     }
 
+
+.email-button {
+  display: inline-block;
+  background-color: #113A3A;
+  text-decoration: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-size: 16px;
+  margin-top: 20px;
+  text-align: center;
+}
+
     .email-button:hover {
-      background-color: #CBA6A4; /* Secondary hover */
-    }
-    .email-footer {
-      text-align: center;
-      font-size: 12px;
-      color: #777;
-      margin-top: 20px;
+      background-color: #2a8787; /* Secondary hover */
     }
   </style>
 </head>
 <body>
-  <div class="email-container">
-    <div class="email-header">
-      <h1>Your Book is Ready</h1>
-    </div>
-    <div class="email-body">
-      <h1>Hello, <%= name %>!</h1>
+  <div class="container">
+    <div class="image-container-top header-image"></div>
+
+    <div class="content">
+      <h2>Hello, <%= name %>!</h2>
       <p>We are pleased to inform you that your book <span class="highlight"><%= book_title %></span> is ready for download.</p>
       <p>Thank you for using LitLab Books to create a literary future based on artificial intelligence.</p>
-      <a href="<%= download_link %>" class="email-button">Download My Book</a>
+      <a href="<%= download_link %>" class="email-button" style="color: white; text-decoration: none;">Download My Book</a>
     </div>
-    <div class="email-footer">
-      <p>&copy; 2024 LitLab Books. All rights reserved.</p>
-    </div>
+    <!-- <div class="image-container-footer footer-image"></div> -->
+    <p class="footer-text">&copy; 2024 LitLab Books. All rights reserved.</p>
+
   </div>
 </body>
 </html>

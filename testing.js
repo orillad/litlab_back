@@ -37,11 +37,14 @@ console.log("THIS IS TESTING\n");
 
 
 // Llamada para enviar un correo
-// const templatePath = './mail/templates/test.ejs'; // Ruta a la plantilla EJS
-// const usr_mail = 'orillad2003@gmail.com'; // Correo destinatario
-// const subject = 'Bienvenido a LitLab Books'; // Asunto del correo
-// const templateData = { name: 'Oriol', product: 'LitLab Book' }; // Datos para la plantilla
-// console.log("Sendig");
+const templatePath = './mail/templates/test.ejs'; // Ruta a la plantilla EJS
+const usr_mail = 'orillad2003@gmail.com'; // Correo destinatario
+const subject = 'Welcome to LitLab Books'; // Asunto del correo
+const templateData = { name: 'Oriol', book_title: "L'Oriol va a esquiar a Val Thorens", download_link:"test" }; // Datos para la plantilla
+console.log("Sendig");
+
+
+// sendEmail(templatePath, usr_mail, subject, templateData);
 
 // console.log("Sendig");
 
@@ -135,7 +138,6 @@ console.log("THIS IS TESTING\n");
 
 
 // Enviar el correo
-// sendEmail(templatePath, usr_mail, subject, templateData);
 
 
 // const getDownloadLink = async (bookName) => {

@@ -19,9 +19,12 @@ export async function sendEmail(templatePath, usr_mail, subject, templateData) {
       subject: subject,
       html: html,
       headers: {
-        'Message-ID': `<${Date.now()}@litlabbooks.com>` // Cambia el dominio según sea necesario
+        'Message-ID': `<${Date.now()}@litlabbooks.com>`, // Cambia el dominio según sea necesario
+        'In-Reply-To': `<${Date.now()}@litlabbooks.com>`, // Afegeix aquest encapçalament per assegurar unicitat
+        'References': `<${Date.now()}@litlabbooks.com>`  // Afegeix aquest encapçalament per assegurar unicitat
       }
     };
+    
     // console.log(mailOptions);
     
 
